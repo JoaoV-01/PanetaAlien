@@ -69,3 +69,83 @@ INSERT INTO usuario(nome,apelido,email,senha)
 DELETE FROM usuario WHERE id>=14 and id<=17
 SHOW TABLES;
 DESCRIBE usuario;
+
+use romullus
+
+go
+
+with MediaMetroEstado as 
+
+	(select
+u.Nome_UF,
+avg(i.Valor_imovel/i.Area_util) as MediaPorEstado
+	from Imovel i
+	join Endereco e
+	on i.fk_Endereco_ID = e.ID
+	join Bairro b
+	on e.fk_Bairro_ID = b.ID
+	join Cidade c
+	on b.fk_Cidade_ID = c.ID
+	join UF u
+	on c.fk_UF_ID = u.ID
+group by u.Nome_UF)
+
+select
+format(MAX (mme.MediaPorEstado), 'C', 'pt-br') as MaximaEstado,
+format(MIN (mme.MediaPorEstado), 'C','pt-br') as MinimaEstado
+from MediaMetroEstado mme 
+
+go
+
+---------------------------------------------------------------
+
+create view vw_MediaMetroCidade as
+with MediaPorCidade as 
+	(select
+c.Nome_Cidade,
+avg(i.Valor_imovel/i.Area_util) as MediaPorCidade
+	from Imovel i
+	join Endereco e 
+	on i.fk_Endereco_ID = e.ID
+	join Bairro b
+	on e.fk_Bairro_ID = b.ID
+	join Cidade c
+	on b.fk_Cidade_ID = c.ID
+group by 
+c.Nome_Cidade)
+
+select
+    Nome_Cidade,
+    format(MediaPorCidade, 'C', 'pt-br') as MediaPorCidade
+from 
+    MediaPorCidade;
+
+go
+
+
+create view vw_Top5MediaPorCidade as
+with ValorMedio as 
+	(select
+c.Nome_Cidade,
+avg(i.Valor_imovel/i.Area_util) as MediaPorCidade
+	from Imovel i
+	join Endereco e 
+	on i.fk_Endereco_ID = e.ID
+	join Bairro b
+	on e.fk_Bairro_ID = b.ID
+	join Cidade c
+	on b.fk_Cidade_ID = c.ID
+group by 
+c.Nome_Cidade)
+select top 5
+
+    Nome_cidade,
+    format(MediaPorCidade, 'C', 'pt-br') as MediaPorCidade
+
+from ValorMedio
+
+go
+
+select * from vw_Top5MediaPorCidade
+
+
